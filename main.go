@@ -77,8 +77,22 @@ func download(w http.ResponseWriter, r *http.Request) {
   w.Header().Set("Content-Type", "application/octet-stream") // Set binary stream type
   // Serve the file
   http.ServeFile(w, r, directory)
+}
+
+func delete_(w http.ResponseWriter, r *http.Request) {
+	filename := r.PathValue("filename") + ".csv"
+	fmt.Println("deleting: "+filename)
+  directory := filepath.Join("download", filename)
+	// open file (check if exists)
+	_, err := os.Open(directory)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "<h1>Internal server error</h1>", http.StatusInternalServerError)
+		return
+	}
 	os.Remove(directory)
 }
+
 //zapiš data do tabulky
 func writeData(filename string, links *[]Link) error{
 	file, err := os.Create("download/" + filename + ".csv")
@@ -125,6 +139,7 @@ func main() {
 	http.HandleFunc("/", index)
 	http.HandleFunc("/search", search)
 	http.HandleFunc("/download/{filename}", download)
+	http.HandleFunc("/delete/{filename}", delete_)
 	fmt.Println("Ready")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
